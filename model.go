@@ -29,7 +29,7 @@ type User struct {
 	UpdatedAt time.Time          `bson:"updatedAt" json:"updatedAt"`
 }
 
-/*func searchRecipients(searchPhrase string, db *mongo.Database) ([]remainder, error) {
+func searchRecipients(searchPhrase string, db *mongo.Database) ([]remainder, error) {
 	var remainders []remainder
 
 	log.Printf("Trying to find recipients filter: %s", searchPhrase)
@@ -52,14 +52,11 @@ type User struct {
 		if err = cursor.Decode(&currentRemainder); err != nil {
 			log.Printf("decoding remainder failed: err")
 		}
-		transformedRemainders, err := transformRemainder(currentRemainder)
-		if err != nil {
-			return []remainder{}, err
-		}
-		remainders = append(remainders, transformedRemainders...)
+
+		remainders = append(remainders, currentRemainder)
 	}
 	return remainders, nil
-}*/
+}
 
 func getLatest(db *mongo.Database) ([]remainder, error) {
 	var remainders []remainder
