@@ -89,17 +89,17 @@ func (a *App) Run() {
 		AllowedOrigins:   []string{os.Getenv("ALLOWED_ORIGINS")},
 		AllowCredentials: true,
 		AllowedMethods:   []string{http.MethodGet, http.MethodOptions},
-		Debug:            true,
+		Debug:            false,
 	})
 
 	server := &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),
 		Handler: corsOptions.Handler(a.Router),
-		TLSConfig: &tls.Config{
+		/*TLSConfig: &tls.Config{
 			Certificates: readSSLCertificates(),
-		},
+		},*/
 	}
 
-	log.Print("starting REST-api server")
-	log.Fatal(server.ListenAndServeTLS("", ""))
+	log.Printf("starting REST-api server at port %s.", os.Getenv("PORT"))
+	log.Fatal(server.ListenAndServe())
 }
