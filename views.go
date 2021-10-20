@@ -80,8 +80,17 @@ func (a *App) postLogin(w http.ResponseWriter, r *http.Request) {
 		}
 	}(r.Body)
 	if u.login(a.DB) {
-		respondWithJSON(w, http.StatusOK, "user authentication succeed")
-		return
+		token, err := getToken(u.Username)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Generating token failed: " + err.Error()))
+			return
+		} else {
+			w.Header().Set("Authorization", "Bearer "+token)
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Token: " + token))
+			return
+		}
 	}
 	respondWithJSON(w, http.StatusNetworkAuthenticationRequired, "user authentication failed")
 }

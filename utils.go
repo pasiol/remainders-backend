@@ -53,7 +53,7 @@ func checkPasswordHash(password, hash string) bool {
 
 func getToken(name string) (string, error) {
 	signingKey := []byte(os.Getenv("JWT_SECRET"))
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{})
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"username": name})
 	tokenString, err := token.SignedString(signingKey)
 	return tokenString, err
 }
