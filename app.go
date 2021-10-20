@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -45,61 +44,28 @@ func (a *App) Initialize() {
 }
 
 func (a *App) initializeRoutes() {
-	a.Router.HandleFunc("/api/v1/search/{filter}", a.search).Methods("GET")
+	a.Router.HandleFunc("/api/v1/search/{filter}", a.getSearch).Methods("GET")
 	a.Router.HandleFunc("/api/v1/latest", a.getLatest).Methods("GET")
-}
-
-func respondWithError(w http.ResponseWriter, code int, message string) {
-	respondWithJSON(w, code, map[string]string{"error": message})
-}
-
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	response, _ := json.Marshal(payload)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	bytes, err := w.Write(response)
-	if err != nil {
-		log.Printf("writing response failed: %s", err)
-	}
-	log.Printf("response bytes %d", bytes)
-}
-
-func (a *App) getLatest(w http.ResponseWriter, _ *http.Request) {
-	remainders, err := getLatest(a.DB)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	respondWithJSON(w, http.StatusOK, remainders)
-}
-
-func (a *App) search(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	log.Printf(" %v", vars["filter"])
-	remainders, err := searchRecipients(vars["filter"], a.DB)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	respondWithJSON(w, http.StatusOK, remainders)
+	a.Router.HandleFunc("/api/v1/user", a.postUser).Methods("POST")
+	a.Router.HandleFunc("/api/v1/login", a.postLogin).Methods("POST")
 }
 
 func (a *App) Run() {
 	corsOptions := cors.New(cors.Options{
 		AllowedOrigins:   []string{os.Getenv("ALLOWED_ORIGINS")},
 		AllowCredentials: true,
-		AllowedMethods:   []string{http.MethodGet, http.MethodOptions},
-		Debug:            false,
+		AllowedMethods:   []string{http.MethodGet, http.MethodOptions, http.MethodConnect, http.MethodPost},
+		Debug:            true,
 	})
 
 	server := &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),
 		Handler: corsOptions.Handler(a.Router),
-		/*TLSConfig: &tls.Config{
+		TLSConfig: &tls.Config{
 			Certificates: readSSLCertificates(),
-		},*/
+		},
 	}
 
 	log.Printf("starting REST-api server at port %s.", os.Getenv("PORT"))
-	log.Fatal(server.ListenAndServe())
+	log.Fatal(server.ListenAndServeTLS("", ""))
 }

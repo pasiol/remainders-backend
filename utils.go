@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func readSSLCertificates() []tls.Certificate {
@@ -32,4 +34,17 @@ func getTSLConfig(cert string) *tls.Config {
 	}
 
 	return tslConfig
+}
+
+func hashAndSalt(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
+}
+
+func checkPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }

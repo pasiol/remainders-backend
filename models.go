@@ -20,8 +20,8 @@ type remainder struct {
 }
 
 type User struct {
-	UserId    primitive.ObjectID `bson:"_id json":"userId"`
-	Username  string             `bson:"userName" json:"userName"`
+	UserId    primitive.ObjectID `bson:"_id" json:"userId"`
+	Username  string             `bson:"username" json:"username"`
 	Password  string             `bson:"password" json:"password"`
 	Email     string             `bson:"email" json:"email"`
 	Approved  bool               `bson:"approved" json:"approved"`
@@ -78,7 +78,7 @@ func getLatest(db *mongo.Database) ([]remainder, error) {
 	for cursor.Next(context.TODO()) {
 		var currentRemainder remainder
 		if err = cursor.Decode(&currentRemainder); err != nil {
-			log.Printf("decoding user failed: err")
+			log.Printf("decoding remainder failed: %s", err.Error())
 		}
 		remainders = append(remainders, currentRemainder)
 	}
