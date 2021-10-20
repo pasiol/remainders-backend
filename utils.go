@@ -59,10 +59,12 @@ func getToken(name string) (string, error) {
 }
 
 func verifyToken(tokenString string) (jwt.Claims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error)) {
+	signingKey := []byte(os.Getenv("JWT_SECRET"))
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return signingKey, nil
 	})
-	if err !=nil {
+
+	if err != nil {
 		return nil, err
 	}
 	return token.Claims, err
