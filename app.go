@@ -66,6 +66,7 @@ func (a *App) Run() {
 		},
 	}
 
-	log.Printf("starting REST-api server at port %s.", os.Getenv("PORT"))
+	log.Printf("starting REST-server :%s.", os.Getenv("PORT"))
+	log.Printf("Version: %s , build: %s", Version, Build)
 	log.Fatal(server.ListenAndServeTLS("", ""))
 }
