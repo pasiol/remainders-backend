@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 
+	jwt "github.com/dgrijalva/jwt-go"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -47,4 +49,11 @@ func hashAndSalt(password string) (string, error) {
 func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func getToken(name string) (string, error) {
+	signingKey := []byte(os.Getenv("JWT_SECRET"))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{})
+	tokenString, err := token.SignedString(signingKey)
+	return tokenString, err
 }
