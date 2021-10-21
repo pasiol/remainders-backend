@@ -1,4 +1,4 @@
-module wremainders-backend-dev
+module remainders-backend
 
 go 1.16
 
