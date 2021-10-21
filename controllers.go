@@ -16,11 +16,11 @@ func searchRecipients(searchPhrase string, db *mongo.Database) ([]remainder, err
 	var remainders []remainder
 
 	log.Printf("Trying to find recipients filter: %s", searchPhrase)
-	options := options.Find()
-	options.SetSort(bson.D{{"updated_at", -1}})
-	options.SetLimit(200)
+	queryOptions := options.Find()
+	queryOptions.SetSort(bson.D{{"updated_at", -1}})
+	queryOptions.SetLimit(200)
 
-	cursor, err := db.Collection("sended").Find(context.TODO(), bson.D{{"to", bson.D{{"$regex", searchPhrase}, {"$options", "im"}}}}, options)
+	cursor, err := db.Collection("sended").Find(context.TODO(), bson.D{{"to", bson.D{{"$regex", searchPhrase}, {"$options", "im"}}}}, queryOptions)
 	if err != nil {
 		return []remainder{}, err
 	}
@@ -44,11 +44,11 @@ func searchRecipients(searchPhrase string, db *mongo.Database) ([]remainder, err
 func getLatest(db *mongo.Database) ([]remainder, error) {
 	var remainders []remainder
 
-	options := options.Find()
-	options.SetSort(bson.D{{"updated_at", -1}})
-	options.SetLimit(25)
+	queryOptions := options.Find()
+	queryOptions.SetSort(bson.D{{"updated_at", -1}})
+	queryOptions.SetLimit(25)
 
-	cursor, err := db.Collection("sended").Find(context.TODO(), bson.D{{}}, options)
+	cursor, err := db.Collection("sended").Find(context.TODO(), bson.D{{}}, queryOptions)
 	if err != nil {
 		return []remainder{}, err
 	}
@@ -77,7 +77,7 @@ func (u User) createUser(db *mongo.Database) error {
 	if err != nil {
 		return err
 	}
-	user := bson.D{{"_id", u.Username}, {"username", u.Username}, {"password", hashedPassword}, {"email", u.Email}, {"approved", false}, {"createAt", time.Now()}, {"updatedAt", time.Now()}}
+	user := bson.D{{"_id", u.Username}, {"username", u.Username}, {"password", hashedPassword}, {"email", u.Email}, {"approved", false}, {"createdAt", time.Now()}, {"updatedAt", time.Now()}}
 	_, err = db.Collection("users").InsertOne(context.TODO(), user)
 	if err != nil {
 		if strings.Contains(err.Error(), "E11000 duplicate key error") {
