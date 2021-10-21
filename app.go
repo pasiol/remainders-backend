@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -64,6 +65,10 @@ func (a *App) Run() {
 		TLSConfig: &tls.Config{
 			Certificates: readSSLCertificates(),
 		},
+		ReadTimeout:    5 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		IdleTimeout:    120 * time.Second,
+		MaxHeaderBytes: 1 << 20,
 	}
 
 	log.Printf("starting REST-server :%s.", os.Getenv("PORT"))
