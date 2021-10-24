@@ -46,13 +46,14 @@ func (a *App) Initialize() {
 
 func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/api/v1/search/{filter}", authorizeRequest(a.getSearch)).Methods("GET")
-	a.Router.HandleFunc("/api/v1/latest", a.getLatest).Methods("GET")
-	a.Router.HandleFunc("/api/v1/user", a.postUser).Methods("POST")
+	a.Router.HandleFunc("/api/v1/latest", authorizeRequest(a.getLatest)).Methods("GET")
+	a.Router.HandleFunc("/api/v1/user", authorizeRequest(a.postUser)).Methods("POST")
 	a.Router.HandleFunc("/api/v1/login", a.postLogin).Methods("POST")
 }
 
 func (a *App) Run() {
 	corsOptions := cors.New(cors.Options{
+		AllowedHeaders:   []string{"X-Requested-With", "Content-Type", "Authorization"},
 		AllowedOrigins:   []string{os.Getenv("ALLOWED_ORIGINS")},
 		AllowCredentials: true,
 		AllowedMethods:   []string{http.MethodGet, http.MethodOptions, http.MethodConnect, http.MethodPost},
