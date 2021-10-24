@@ -92,9 +92,8 @@ func (a *App) postLogin(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Generating token failed: " + err.Error()))
 			return
 		} else {
-			w.Header().Set("Authorization", "Bearer "+token)
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("Token: " + token))
+			w.Write([]byte("Bearer " + token))
 			return
 		}
 	}
