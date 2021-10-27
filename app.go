@@ -25,7 +25,7 @@ func (a *App) Initialize() {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Reading environment failed.")
+		log.Print("Reading environment failed.")
 	}
 
 	mongoConfig := mongoUtils.MongoConfig{
