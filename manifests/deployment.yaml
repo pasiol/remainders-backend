@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: remainders-backend
+  namespace: remainders
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: remainders-backend
+  template:
+    metadata:
+      labels:
+        app: remainders-backend
+    spec:
+      containers:
+        - name: remainders-backend
+          image: pasiol/remainders-backend:latest
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb
+                  key: DB_USER
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb
+                  key: PASSWORD
+            - name: URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb
+                  key: URI
+          resources:
+            limits:
+              cpu: "15m"
+              memory: "10Mi"
