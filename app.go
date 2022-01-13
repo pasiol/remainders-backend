@@ -45,10 +45,12 @@ func (a *App) Initialize() {
 }
 
 func (a *App) initializeRoutes() {
+	a.Router.HandleFunc("/api/healthz", a.getHealth).Methods("GET")
 	a.Router.HandleFunc("/api/v1/search/{filter}", authorizeRequest(a.getSearch)).Methods("GET")
 	a.Router.HandleFunc("/api/v1/latest", authorizeRequest(a.getLatest)).Methods("GET")
 	a.Router.HandleFunc("/api/v1/user", authorizeRequest(a.postUser)).Methods("POST")
 	a.Router.HandleFunc("/api/v1/login", a.postLogin).Methods("POST")
+
 }
 
 func (a *App) Run() {

@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -98,4 +100,18 @@ func (a *App) postLogin(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	respondWithJSON(w, http.StatusNetworkAuthenticationRequired, "user authentication failed")
+}
+
+func (a *App) getHealth(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
+	err := a.DB.Client().Ping(ctx, nil)
+	log.Printf("healthz: %v", err)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "degraded")
+		return
+	}
+	var p = Payload{
+		Message: "functional",
+	}
+	respondWithJSON(w, http.StatusOK, p)
 }

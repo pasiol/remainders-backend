@@ -27,3 +27,7 @@ type User struct {
 type Exception struct {
 	Message string `json:"message"`
 }
+
+type Payload struct {
+	Message string `json:"message"`
+}
