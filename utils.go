@@ -5,7 +5,9 @@ import (
 	"crypto/x509"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
 
@@ -68,4 +70,22 @@ func verifyToken(tokenString string) (jwt.Claims, error) {
 		return nil, err
 	}
 	return token.Claims, err
+}
+
+func SplitOrigins() []string {
+	origins := strings.Split(os.Getenv("ALLOW_ORIGINS"), ",")
+	for _, origin := range origins {
+		uri, err := url.ParseRequestURI(origin)
+		if err != nil && (uri.Scheme == "https" || uri.Scheme == "http") {
+			return []string{}
+		}
+	}
+	return origins
+}
+
+func GetDebug() bool {
+	if os.Getenv("APP_DEBUG") == "true" {
+		return true
+	}
+	return false
 }

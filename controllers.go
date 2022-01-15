@@ -2,15 +2,37 @@ package main
 
 import (
 	"context"
-	"errors"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
-	"strings"
+	"os"
 	"time"
 
+	mongodb "gitlab.com/pasiol/mongoUtils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+func (a *App) getDbConnection() (*mongo.Database, *mongo.Client, error) {
+	var err error
+	var db *mongo.Database
+	var client *mongo.Client
+	for i := 1; i <= 10; i++ {
+		m := mongodb.MongoConfig{
+			User:     os.Getenv("DB_USER"),
+			Password: os.Getenv("PASSWORD"),
+			Db:       os.Getenv("APP_DB"),
+			URI:      os.Getenv("APP_DB_URI"),
+		}
+		db, client, err = mongodb.ConnectOrFail(m, false)
+		if err == nil {
+			break
+		}
+		a.API.Logger.Printf("connecting to database failed, iteration: %d, err: %s", i, err)
+		time.Sleep(10 * time.Second)
+	}
+	return db, client, err
+}
 
 func searchRecipients(searchPhrase string, db *mongo.Database) ([]remainder, error) {
 	var remainders []remainder
@@ -69,32 +91,14 @@ func getLatest(db *mongo.Database) ([]remainder, error) {
 
 }
 
-func (u User) createUser(db *mongo.Database) error {
-
-	// TODO validate user data
-
-	hashedPassword, err := hashAndSalt(u.Password)
-	if err != nil {
-		return err
-	}
-	user := bson.D{{"_id", u.Username}, {"username", u.Username}, {"password", hashedPassword}, {"email", u.Email}, {"approved", false}, {"createdAt", time.Now()}, {"updatedAt", time.Now()}}
-	_, err = db.Collection("users").InsertOne(context.TODO(), user)
-	if err != nil {
-		if strings.Contains(err.Error(), "E11000 duplicate key error") {
-			return errors.New("username already exists")
-		}
-		return err
-	}
-	return nil
-
-}
-
-func (u User) login(db *mongo.Database) bool {
+func (a *App) Login(u User) bool {
 	var user User
 	filter := bson.D{{"username", u.Username}, {"approved", true}}
 	queryOptions := options.FindOne()
 	queryOptions.SetProjection(bson.D{{"password", 1}, {"username", 1}, {"_id", 0}})
-	result := db.Collection("users").FindOne(context.TODO(), filter, queryOptions)
+	err := a.Db.Client().Ping(context.TODO(), readpref.Primary())
+	a.API.Logger.Printf("ping err: %s", err)
+	result := a.Db.Collection("users").FindOne(context.Background(), filter, queryOptions)
 
 	if err := result.Decode(&user); err != nil {
 		log.Printf("decoding user failed: %s", err)

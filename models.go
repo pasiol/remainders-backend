@@ -1,9 +1,10 @@
 package main
 
 import (
+	"github.com/go-playground/validator"
+	"github.com/labstack/echo/v4"
+	"net/http"
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type remainder struct {
@@ -14,14 +15,23 @@ type remainder struct {
 	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 }
 
-type User struct {
-	UserId    primitive.ObjectID `bson:"_id" json:"userId"`
-	Username  string             `bson:"username" json:"username"`
-	Password  string             `bson:"password" json:"password"`
-	Email     string             `bson:"email" json:"email"`
-	Approved  bool               `bson:"approved" json:"approved"`
-	CreatedAt time.Time          `bson:"createdAt" json:"createdAt"`
-	UpdatedAt time.Time          `bson:"updatedAt" json:"updatedAt"`
+type (
+	User struct {
+		Username string `bson:"username" json:"username" validate:"required"`
+		Password string `bson:"password" json:"password" validate:"required"`
+	}
+
+	CustomValidator struct {
+		validator *validator.Validate
+	}
+)
+
+func (cv *CustomValidator) Validate(i interface{}) error {
+	if err := cv.validator.Struct(i); err != nil {
+		// Optionally, you could return the error to give each route more control over the status code
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	return nil
 }
 
 type Exception struct {

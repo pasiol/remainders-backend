@@ -1,4 +1,4 @@
-POST https://localhost:8888/api/v1/login HTTP/1.1
+POST https://localhost:8888/login HTTP/1.1
 Content-Type: application/json
 
 {

@@ -2,79 +2,70 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
+	"github.com/go-playground/validator"
+	"github.com/joho/godotenv"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
-	"github.com/rs/cors"
-	"gitlab.com/pasiol/mongoUtils"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type App struct {
-	Router    *mux.Router
-	DB        *mongo.Database
+	API       *echo.Echo
+	Db        *mongo.Database
 	Client    *mongo.Client
 	TLSConfig *tls.Config
+	Debug     bool
 }
 
 func (a *App) Initialize() {
+	a.API = echo.New()
 
+	a.API.Validator = &CustomValidator{validator: validator.New()}
+	a.API.Use(middleware.Logger())
+	a.API.Use(middleware.Recover())
+	a.API.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		Timeout: 10 * time.Second,
+	}))
 	err := godotenv.Load()
 	if err != nil {
 		log.Print("Reading environment failed.")
 	}
-
-	mongoConfig := mongoUtils.MongoConfig{
-		Db:       os.Getenv("DB"),
-		User:     os.Getenv("DB_USER"),
-		Password: os.Getenv("PASSWORD"),
-		URI:      os.Getenv("URI"),
+	a.Debug = GetDebug()
+	origins := SplitOrigins()
+	a.API.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: origins,
+		AllowMethods: []string{http.MethodGet},
+	}))
+	if a.Debug {
+		a.API.Logger.Printf(fmt.Sprintf("CORS: %v", origins))
 	}
-	a.DB, a.Client, err = mongoUtils.ConnectOrFail(mongoConfig, false)
+
+	a.Db, a.Client, err = a.getDbConnection()
 	if err != nil {
-		log.Fatalf("database connection error: %s", err)
+		a.API.Logger.Fatal("initializing db connection failed: %s", err)
 	}
-	log.Printf("connected to db: %s", a.DB.Name())
+	a.API.Logger.Printf("database connection succeed db: %s", a.Db.Name())
+	a.API.GET("/healthz", a.getHealthz)
+	//a.API.GET("/api/v1/search/{filter}", a.getSearch)
+	//a.API.GET(
 
-	a.Router = mux.NewRouter()
-	a.initializeRoutes()
-}
+	a.API.POST("/login", a.postLogin)
 
-func (a *App) initializeRoutes() {
-	a.Router.HandleFunc("/api/healthz", a.getHealth).Methods("GET")
-	a.Router.HandleFunc("/api/v1/search/{filter}", authorizeRequest(a.getSearch)).Methods("GET")
-	a.Router.HandleFunc("/api/v1/latest", authorizeRequest(a.getLatest)).Methods("GET")
-	a.Router.HandleFunc("/api/v1/user", authorizeRequest(a.postUser)).Methods("POST")
-	a.Router.HandleFunc("/api/v1/login", a.postLogin).Methods("POST")
+	authorizedEndpoints := a.API.Group("api/v1")
+	config := middleware.JWTConfig{
+		Claims:     &jwtCustomClaims{},
+		SigningKey: []byte(os.Getenv("JWT_SECRET")),
+	}
+	authorizedEndpoints.Use(middleware.JWTWithConfig(config))
+	authorizedEndpoints.GET("latest", a.getLatest)
 
 }
 
 func (a *App) Run() {
-	corsOptions := cors.New(cors.Options{
-		AllowedHeaders:   []string{"X-Requested-With", "Content-Type", "Authorization"},
-		AllowedOrigins:   []string{os.Getenv("ALLOWED_ORIGINS")},
-		AllowCredentials: true,
-		AllowedMethods:   []string{http.MethodGet, http.MethodOptions, http.MethodConnect, http.MethodPost},
-		Debug:            true,
-	})
-
-	server := &http.Server{
-		Addr:    ":" + os.Getenv("PORT"),
-		Handler: corsOptions.Handler(a.Router),
-		TLSConfig: &tls.Config{
-			Certificates: readSSLCertificates(),
-		},
-		ReadTimeout:    5 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		IdleTimeout:    120 * time.Second,
-		MaxHeaderBytes: 1 << 20,
-	}
-
-	log.Printf("starting REST-server :%s.", os.Getenv("PORT"))
-	log.Printf("Version: %s , build: %s", Version, Build)
-	log.Fatal(server.ListenAndServeTLS("", ""))
+	a.API.Logger.Fatal(a.API.StartTLS(fmt.Sprintf(":%s", os.Getenv("APP_PORT")), os.Getenv("SSL_CERT"), os.Getenv("SSL_KEY")))
 }
