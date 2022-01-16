@@ -2,7 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"github.com/labstack/echo/v4"
+	"golang.org/x/crypto/acme"
+	"golang.org/x/crypto/acme/autocert"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -11,6 +16,25 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+func getCustomHTTPServer(e *echo.Echo) http.Server {
+	autoTLSManager := autocert.Manager{
+		Prompt: autocert.AcceptTOS,
+		// Cache certificates to avoid issues with rate limits (https://letsencrypt.org/docs/rate-limits)
+		Cache: autocert.DirCache(os.Getenv("APP_CERT_CACHE_PATH")),
+		//HostPolicy: autocert.HostWhitelist("<DOMAIN>"),
+	}
+	return http.Server{
+		Addr:    ":443",
+		Handler: e, // set Echo as handler
+		TLSConfig: &tls.Config{
+			//Certificates: nil, // <-- s.ListenAndServeTLS will populate this field
+			GetCertificate: autoTLSManager.GetCertificate,
+			NextProtos:     []string{acme.ALPNProto},
+		},
+		//ReadTimeout: 30 * time.Second, // use custom timeouts
+	}
+}
 
 func (a *App) getDbConnection() (*mongo.Database, *mongo.Client, error) {
 	var err error

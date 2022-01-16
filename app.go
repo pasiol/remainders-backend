@@ -67,5 +67,12 @@ func (a *App) Initialize() {
 }
 
 func (a *App) Run() {
-	a.API.Logger.Fatal(a.API.StartTLS(fmt.Sprintf(":%s", os.Getenv("APP_PORT")), os.Getenv("SSL_CERT"), os.Getenv("SSL_KEY")))
+	if os.Getenv("SSL_CERT") != "" && os.Getenv("SSL_KEY") != "" {
+		a.API.Logger.Fatal(a.API.StartTLS(fmt.Sprintf(":%s", os.Getenv("APP_PORT")), os.Getenv("SSL_CERT"), os.Getenv("SSL_KEY")))
+	} else {
+		s := getCustomHTTPServer(a.API)
+		if err := s.ListenAndServeTLS("", ""); err != http.ErrServerClosed {
+			a.API.Logger.Fatal(err)
+		}
+	}
 }
