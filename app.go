@@ -56,13 +56,14 @@ func (a *App) Initialize() {
 
 	a.API.POST("/login", a.postLogin)
 
-	authorizedEndpoints := a.API.Group("api/v1")
+	authorizedEndpoints := a.API.Group("/api/v1")
 	config := middleware.JWTConfig{
 		Claims:     &jwtCustomClaims{},
 		SigningKey: []byte(os.Getenv("JWT_SECRET")),
 	}
 	authorizedEndpoints.Use(middleware.JWTWithConfig(config))
-	authorizedEndpoints.GET("latest", a.getLatest)
+	route := authorizedEndpoints.GET("/latest", a.getLatest)
+	route.Name = "get-latest"
 
 }
 

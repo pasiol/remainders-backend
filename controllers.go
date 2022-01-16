@@ -33,8 +33,8 @@ func (a *App) getDbConnection() (*mongo.Database, *mongo.Client, error) {
 	return db, client, err
 }
 
-func searchRecipients(searchPhrase string, db *mongo.Database) ([]remainder, error) {
-	var remainders []remainder
+func searchRecipients(searchPhrase string, db *mongo.Database) ([]Remainder, error) {
+	var remainders []Remainder
 
 	log.Printf("Trying to find recipients filter: %s", searchPhrase)
 	queryOptions := options.Find()
@@ -43,7 +43,7 @@ func searchRecipients(searchPhrase string, db *mongo.Database) ([]remainder, err
 
 	cursor, err := db.Collection("sended").Find(context.TODO(), bson.D{{"to", bson.D{{"$regex", searchPhrase}, {"$options", "im"}}}}, queryOptions)
 	if err != nil {
-		return []remainder{}, err
+		return []Remainder{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
@@ -52,7 +52,7 @@ func searchRecipients(searchPhrase string, db *mongo.Database) ([]remainder, err
 		}
 	}(cursor, context.TODO())
 	for cursor.Next(context.TODO()) {
-		var currentRemainder remainder
+		var currentRemainder Remainder
 		if err = cursor.Decode(&currentRemainder); err != nil {
 			log.Printf("decoding remainder failed: err")
 		}
@@ -62,8 +62,8 @@ func searchRecipients(searchPhrase string, db *mongo.Database) ([]remainder, err
 	return remainders, nil
 }
 
-func getLatest(db *mongo.Database) ([]remainder, error) {
-	var remainders []remainder
+func find(db *mongo.Database) ([]Remainder, error) {
+	var remainders []Remainder
 
 	queryOptions := options.Find()
 	queryOptions.SetSort(bson.D{{"updated_at", -1}})
@@ -71,7 +71,7 @@ func getLatest(db *mongo.Database) ([]remainder, error) {
 
 	cursor, err := db.Collection("sended").Find(context.TODO(), bson.D{{}}, queryOptions)
 	if err != nil {
-		return []remainder{}, err
+		return []Remainder{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
@@ -80,14 +80,13 @@ func getLatest(db *mongo.Database) ([]remainder, error) {
 		}
 	}(cursor, context.TODO())
 	for cursor.Next(context.TODO()) {
-		var currentRemainder remainder
+		var currentRemainder Remainder
 		if err = cursor.Decode(&currentRemainder); err != nil {
 			log.Printf("decoding remainder failed: %s", err.Error())
 		}
 		remainders = append(remainders, currentRemainder)
 	}
 	return remainders, nil
-
 }
 
 func (u *User) Login(db *mongo.Database) bool {

@@ -56,8 +56,9 @@ func (a *App) postLogin(c echo.Context) error {
 }
 
 func (a *App) getLatest(c echo.Context) error {
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*jwtCustomClaims)
-	name := claims.Name
-	return c.String(http.StatusOK, "Welcome "+name+"!")
+	remainders, err := find(a.Db)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, remainders)
 }

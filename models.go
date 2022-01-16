@@ -4,15 +4,14 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	"net/http"
-	"time"
 )
 
-type remainder struct {
-	To        string    `bson:"to" json:"to"`
-	Title     string    `bson:"title" json:"title"`
-	Message   string    `bson:"message" json:"message"`
-	Type      string    `bson:"type" json:"type"`
-	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
+type Remainder struct {
+	To        string `bson:"to" json:"to"`
+	Title     string `bson:"title" json:"title"`
+	Message   string `bson:"message" json:"message"`
+	Type      string `bson:"type" json:"type"`
+	UpdatedAt string `bson:"updated_at" json:"updated_at"`
 }
 
 type (
@@ -34,10 +33,6 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return nil
 }
 
-type Exception struct {
-	Message string `json:"message"`
-}
-
-type Payload struct {
+type Notification struct {
 	Message string `json:"message"`
 }
