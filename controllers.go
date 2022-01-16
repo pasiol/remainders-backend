@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
 	"os"
 	"time"
@@ -91,17 +90,14 @@ func getLatest(db *mongo.Database) ([]remainder, error) {
 
 }
 
-func (a *App) Login(u User) bool {
+func (u *User) Login(db *mongo.Database) bool {
 	var user User
 	filter := bson.D{{"username", u.Username}, {"approved", true}}
 	queryOptions := options.FindOne()
 	queryOptions.SetProjection(bson.D{{"password", 1}, {"username", 1}, {"_id", 0}})
-	err := a.Db.Client().Ping(context.TODO(), readpref.Primary())
-	a.API.Logger.Printf("ping err: %s", err)
-	result := a.Db.Collection("users").FindOne(context.Background(), filter, queryOptions)
+	result := db.Collection("users").FindOne(context.Background(), filter, queryOptions)
 
 	if err := result.Decode(&user); err != nil {
-		log.Printf("decoding user failed: %s", err)
 		return false
 	}
 	if checkPasswordHash(u.Password, user.Password) {

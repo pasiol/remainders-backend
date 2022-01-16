@@ -34,11 +34,11 @@ func (a *App) postLogin(c echo.Context) error {
 	if err := c.Validate(u); err != nil {
 		return err
 	}
-	if a.Login(*u) {
+	if u.Login(a.Db) {
 		claims := &jwtCustomClaims{
 			u.Username,
 			jwt.StandardClaims{
-				ExpiresAt: time.Now().Add(time.Hour * 6).Unix(),
+				ExpiresAt: time.Now().Add(time.Hour * 2).Unix(),
 			},
 		}
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
