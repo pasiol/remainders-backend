@@ -16,11 +16,11 @@ type jwtCustomClaims struct {
 }
 
 func (a *App) getHealthz(c echo.Context) error {
-	ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
+	var ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 	err := a.Db.Client().Ping(ctx, readpref.Primary())
+	defer cancel()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "non-operational")
-		return err
 	}
 	return c.String(http.StatusOK, "operational")
 }
@@ -57,6 +57,15 @@ func (a *App) postLogin(c echo.Context) error {
 
 func (a *App) getLatest(c echo.Context) error {
 	remainders, err := find(a.Db)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, remainders)
+}
+
+func (a *App) getSearch(c echo.Context) error {
+	filter := c.Param("filter")
+	remainders, err := search(filter, a.Db)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

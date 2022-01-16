@@ -51,9 +51,6 @@ func (a *App) Initialize() {
 	}
 	a.API.Logger.Printf("database connection succeed db: %s", a.Db.Name())
 	a.API.GET("/healthz", a.getHealthz)
-	//a.API.GET("/api/v1/search/{filter}", a.getSearch)
-	//a.API.GET(
-
 	a.API.POST("/login", a.postLogin)
 
 	authorizedEndpoints := a.API.Group("/api/v1")
@@ -62,9 +59,11 @@ func (a *App) Initialize() {
 		SigningKey: []byte(os.Getenv("JWT_SECRET")),
 	}
 	authorizedEndpoints.Use(middleware.JWTWithConfig(config))
+
 	route := authorizedEndpoints.GET("/latest", a.getLatest)
 	route.Name = "get-latest"
-
+	route = authorizedEndpoints.GET("/search/:filter", a.getSearch)
+	route.Name = "get-search"
 }
 
 func (a *App) Run() {

@@ -33,10 +33,8 @@ func (a *App) getDbConnection() (*mongo.Database, *mongo.Client, error) {
 	return db, client, err
 }
 
-func searchRecipients(searchPhrase string, db *mongo.Database) ([]Remainder, error) {
+func search(searchPhrase string, db *mongo.Database) ([]Remainder, error) {
 	var remainders []Remainder
-
-	log.Printf("Trying to find recipients filter: %s", searchPhrase)
 	queryOptions := options.Find()
 	queryOptions.SetSort(bson.D{{"updated_at", -1}})
 	queryOptions.SetLimit(200)

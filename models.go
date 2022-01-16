@@ -20,6 +20,10 @@ type (
 		Password string `bson:"password" json:"password" validate:"required"`
 	}
 
+	/*Search struct {
+		Filter string `bson:"filter" json:"filter" validate:"required"`
+	}*/
+
 	CustomValidator struct {
 		validator *validator.Validate
 	}
@@ -31,8 +35,4 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return nil
-}
-
-type Notification struct {
-	Message string `json:"message"`
 }
