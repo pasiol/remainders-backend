@@ -15,24 +15,39 @@ spec:
     spec:
       containers:
         - name: remainders-backend
-          image: pasiol/remainders-backend:latest
+          image: IMAGE
           env:
-            - name: DB_USER
+            - name: APP_PORT
+              value: "8888"
+            - name: APP_DB
               valueFrom:
                 secretKeyRef:
-                  name: mongodb
-                  key: DB_USER
-            - name: PASSWORD
+                  name: backend
+                  key: APP_DB
+            - name: APP_DB_USER
               valueFrom:
                 secretKeyRef:
-                  name: mongodb
-                  key: PASSWORD
-            - name: URI
+                  name: backend
+                  key: APP_DB_USER
+            - name: APP_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mongodb
-                  key: URI
+                  name: backend
+                  key: APP_DB_PASSWORD
+            - name: APP_DB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: backend
+                  key: APP_DB_URI
+            - name: ALLOWED_ORIGINS
+              value: "*"
           resources:
             limits:
               cpu: "15m"
-              memory: "10Mi"
+              memory: "30Mi"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8888
+            initialDelaySeconds: 30
+            periodSeconds: 10
