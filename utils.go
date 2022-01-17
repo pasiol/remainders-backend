@@ -73,7 +73,7 @@ func verifyToken(tokenString string) (jwt.Claims, error) {
 }
 
 func SplitOrigins() []string {
-	origins := strings.Split(os.Getenv("ALLOW_ORIGINS"), ",")
+	origins := strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
 	for _, origin := range origins {
 		uri, err := url.ParseRequestURI(origin)
 		if err != nil && (uri.Scheme == "https" || uri.Scheme == "http") {

@@ -3,15 +3,16 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/go-playground/validator"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
-	"net/http"
-	"os"
-	"time"
 )
 
 type App struct {

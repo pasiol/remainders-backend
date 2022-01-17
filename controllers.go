@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"github.com/labstack/echo/v4"
-	"golang.org/x/crypto/acme"
-	"golang.org/x/crypto/acme/autocert"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/labstack/echo/v4"
+	"golang.org/x/crypto/acme"
+	"golang.org/x/crypto/acme/autocert"
 
 	mongodb "gitlab.com/pasiol/mongoUtils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -42,8 +43,8 @@ func (a *App) getDbConnection() (*mongo.Database, *mongo.Client, error) {
 	var client *mongo.Client
 	for i := 1; i <= 10; i++ {
 		m := mongodb.MongoConfig{
-			User:     os.Getenv("DB_USER"),
-			Password: os.Getenv("PASSWORD"),
+			User:     os.Getenv("APP_DB_USER"),
+			Password: os.Getenv("APP_DB_PASSWORD"),
 			Db:       os.Getenv("APP_DB"),
 			URI:      os.Getenv("APP_DB_URI"),
 		}

@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/golang-jwt/jwt"
-	"github.com/labstack/echo/v4"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/golang-jwt/jwt"
+	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type jwtCustomClaims struct {
@@ -34,11 +35,16 @@ func (a *App) postLogin(c echo.Context) error {
 	if err := c.Validate(u); err != nil {
 		return err
 	}
+	expirationTime := time.Hour * 2
+	if a.Debug {
+		expirationTime = time.Minute * 10
+	}
 	if u.Login(a.Db) {
+
 		claims := &jwtCustomClaims{
 			u.Username,
 			jwt.StandardClaims{
-				ExpiresAt: time.Now().Add(time.Hour * 2).Unix(),
+				ExpiresAt: time.Now().Add(expirationTime).Unix(),
 			},
 		}
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
