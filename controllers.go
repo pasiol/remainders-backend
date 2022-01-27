@@ -12,7 +12,6 @@ import (
 	"golang.org/x/crypto/acme"
 	"golang.org/x/crypto/acme/autocert"
 
-	mongodb "gitlab.com/pasiol/mongoUtils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -22,8 +21,8 @@ func getCustomHTTPServer(e *echo.Echo) http.Server {
 	autoTLSManager := autocert.Manager{
 		Prompt: autocert.AcceptTOS,
 		// Cache certificates to avoid issues with rate limits (https://letsencrypt.org/docs/rate-limits)
-		Cache: autocert.DirCache(os.Getenv("APP_CERT_CACHE_PATH")),
-		//HostPolicy: autocert.HostWhitelist("<DOMAIN>"),
+		Cache:      autocert.DirCache(os.Getenv("APP_CERT_CACHE_PATH")),
+		HostPolicy: autocert.HostWhitelist("APP_DOMAIN_NAME"),
 	}
 	return http.Server{
 		Addr:    ":443",
@@ -33,7 +32,7 @@ func getCustomHTTPServer(e *echo.Echo) http.Server {
 			GetCertificate: autoTLSManager.GetCertificate,
 			NextProtos:     []string{acme.ALPNProto},
 		},
-		//ReadTimeout: 30 * time.Second, // use custom timeouts
+		ReadTimeout: 30 * time.Second, // use custom timeouts
 	}
 }
 
@@ -42,13 +41,13 @@ func (a *App) getDbConnection() (*mongo.Database, *mongo.Client, error) {
 	var db *mongo.Database
 	var client *mongo.Client
 	for i := 1; i <= 10; i++ {
-		m := mongodb.MongoConfig{
+		m := MongoConfig{
 			User:     os.Getenv("APP_DB_USER"),
 			Password: os.Getenv("APP_DB_PASSWORD"),
 			Db:       os.Getenv("APP_DB"),
 			URI:      os.Getenv("APP_DB_URI"),
 		}
-		db, client, err = mongodb.ConnectOrFail(m, false)
+		db, client, err = ConnectOrFail(m, true)
 		if err == nil {
 			break
 		}

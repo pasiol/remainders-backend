@@ -51,7 +51,7 @@ func (a *App) Initialize() {
 		a.API.Logger.Fatal("initializing db connection failed: %s", err)
 	}
 	a.API.Logger.Printf("database connection succeed db: %s", a.Db.Name())
-	a.API.GET("/healthz", a.getHealthz)
+	a.API.GET("/", a.getHealthz)
 	a.API.POST("/login", a.postLogin)
 
 	authorizedEndpoints := a.API.Group("/api/v1")
@@ -70,10 +70,6 @@ func (a *App) Initialize() {
 func (a *App) Run() {
 	if os.Getenv("SSL_CERT") != "" && os.Getenv("SSL_KEY") != "" {
 		a.API.Logger.Fatal(a.API.StartTLS(fmt.Sprintf(":%s", os.Getenv("APP_PORT")), os.Getenv("SSL_CERT"), os.Getenv("SSL_KEY")))
-	} else {
-		s := getCustomHTTPServer(a.API)
-		if err := s.ListenAndServeTLS("", ""); err != http.ErrServerClosed {
-			a.API.Logger.Fatal(err)
-		}
 	}
+	a.API.Logger.Fatal(a.API.Start(fmt.Sprintf(":%s", os.Getenv("APP_PORT"))))
 }

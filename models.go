@@ -27,6 +27,13 @@ type (
 	CustomValidator struct {
 		validator *validator.Validate
 	}
+
+	MongoConfig struct {
+		Db       string
+		User     string
+		Password string
+		URI      string
+	}
 )
 
 func (cv *CustomValidator) Validate(i interface{}) error {
