@@ -6,13 +6,14 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
 	"strings"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/golang-jwt/jwt/v4"
 
@@ -77,15 +78,20 @@ func verifyToken(tokenString string) (jwt.Claims, error) {
 	return token.Claims, err
 }
 
-func SplitOrigins() []string {
-	origins := strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
+func SplitOrigins() ([]string, error) {
+	s, exists := os.LookupEnv("ALLOWED_ORIGINS")
+	if !exists {
+		return []string{}, errors.New("ALLOWED_ORIGINS variable missing")
+	}
+	origins := strings.Split(s, ",")
+
 	for _, origin := range origins {
 		uri, err := url.ParseRequestURI(origin)
-		if err != nil && (uri.Scheme == "https" || uri.Scheme == "http") {
-			return []string{}
+		if err == nil && (uri.Scheme != "https" && uri.Scheme != "http") {
+			return []string{}, errors.New("malformed uri")
 		}
 	}
-	return origins
+	return origins, nil
 }
 
 func GetDebug() bool {

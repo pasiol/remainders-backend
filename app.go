@@ -37,7 +37,10 @@ func (a *App) Initialize() {
 		log.Print("Reading environment failed.")
 	}
 	a.Debug = GetDebug()
-	origins := SplitOrigins()
+	origins, err := SplitOrigins()
+	if err != nil {
+		a.API.Logger.Fatalf("parsing origins failed: %s", err)
+	}
 	a.API.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: origins,
 		AllowMethods: []string{http.MethodGet},
