@@ -16,17 +16,22 @@ urlretrieve(
 with Diagram("Remainders", show=True, outformat="png"):
 
     mongo = Pod("MongoDB")
-    frontend = Service("frontend")
-    backend = Service("Backend")
+    frontend_svc = Service("frontend")
+    backend_svc = Service("Backend")
     ingress = Ingress("domain.com")
     ingress - Custom("Cert Manager", certmanager_icon) - ingress
-    ingress - frontend
+    ingress - frontend_svc
     system_x = Server("System X")
     getter = Cronjob("Remainder getter")
     mailer = Cronjob("Remainder mailer")
     system_x >> getter >> mongo >> mailer
+    backend = Pod("backend")
 
     with Cluster("Frontend deployment"):
-        (frontend - [Pod("frontend"), Pod("frontend"), Pod("frontend")])
+        (
+            frontend_svc
+            - [Pod("frontend"), Pod("frontend"), Pod("frontend")]
+            - backend_svc
+        )
 
-    (frontend - backend - mongo)
+        (backend_svc - backend - mongo)
