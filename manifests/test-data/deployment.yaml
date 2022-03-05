@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mongo-client
+  name: mongo-client
+  namespace: remainders-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo-client
+  template:
+    metadata:
+      labels:
+        app: mongo-client
+    spec:
+      containers:
+        - image: pasiol/remainders-test-data@sha256:9d87997c236cef27dc0e81af7f76b96fafd22c38a8fc42b417a264a39a09d622
+          resources:
+            limits:
+              cpu: "15m"
+              memory: "100Mi"
+          name: "mongo-test-data"
+          command: [ "/bin/bash", "-c", "--" ]
+          args: [ "while true; do sleep 30; done;" ]
