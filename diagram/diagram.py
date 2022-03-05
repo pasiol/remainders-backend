@@ -15,7 +15,8 @@ urlretrieve(
 
 with Diagram("Remainders", show=True, outformat="png"):
 
-    mongo = Pod("MongoDB")
+    mongo = Pod("mongo")
+    mongo_svc = Service("mongo-nodeport-svc")
     frontend_svc = Service("frontend")
     backend_svc = Service("Backend")
     ingress = Ingress("domain.com")
@@ -26,6 +27,9 @@ with Diagram("Remainders", show=True, outformat="png"):
     mailer = Cronjob("Remainder mailer")
     system_x >> getter >> mongo >> mailer
     backend = Pod("backend")
+    pv = PVC("mongo-data-pv")
+    pvc = PVC("mongo-data-pvc")
+    backend_svc - backend - mongo_svc - mongo -pvc -pv
 
     with Cluster("Frontend deployment"):
         (
@@ -34,4 +38,10 @@ with Diagram("Remainders", show=True, outformat="png"):
             - backend_svc
         )
 
-        (backend_svc - backend - mongo)
+    
+
+    mailer - Service("mailhog-smtp-svc") - Pod("mailhog") - Service("mailhog-web-svc") - Ingress("mailhog-ing")
+
+   
+
+

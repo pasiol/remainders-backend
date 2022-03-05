@@ -1,4 +1,10 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomiztion
+kind: Kustomization
 resources:
-  - manifests/deployment.yaml
+  - manifests/namespace.yaml
+# Mongo
+  - manifests/mongodb/persistentVolume.yaml
+  - manifests/mongodb/persistentVolumeClaim.yaml
+  - manifests/mongodb/secrets.yaml
+  - manifests/mongodb/service.yaml
+  - manifests/mongodb/deployment.yaml

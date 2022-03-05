@@ -2,10 +2,11 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: mongo-data-pv
+  namespace: remainders-demo
 spec:
   accessModes:
     - ReadWriteOnce
   capacity:
     storage: 1Gi
   hostPath:
-    path: /data/mongo
+    path: /mnt/c/temp/mongo-remainders
