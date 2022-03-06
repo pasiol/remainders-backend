@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/url"
@@ -101,39 +100,21 @@ func GetDebug() bool {
 	return false
 }
 
-func generateMongoURI(m MongoConfig, connectDirect bool) (string, error) {
-	if m.URI == "" || m.Db == "" {
-		return "", errors.New("malformed mongo config struct")
-	}
-	var credentials, parameters string
-	if m.User != "" && m.Password != "" {
-		credentials = fmt.Sprintf("%s:%s@", m.User, m.Password)
-	}
-	if connectDirect {
-		parameters = "?connect=direct"
-		return fmt.Sprintf("mongodb://%s%s/%s%s", credentials, m.URI, m.Db, parameters), nil
-	}
-	parameters = "?retryWrites=true&w=majority"
-	return fmt.Sprintf("mongodb+srv://%s%s/%s%s", credentials, m.URI, m.Db, parameters), nil
-}
+func connectOrFail(uri string, db string) (*mongo.Database, *mongo.Client, error) {
 
-func ConnectOrFail(m MongoConfig, connectDirect bool) (a *mongo.Database, b *mongo.Client, err error) {
-	mongoURI, err := generateMongoURI(m, connectDirect)
+	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
-		return &mongo.Database{}, &mongo.Client{}, err
+		return nil, nil, err
 	}
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoURI))
+	err = client.Connect(context.Background())
 	if err != nil {
-		return &mongo.Database{}, &mongo.Client{}, err
+		return nil, nil, err
 	}
-	err = client.Connect(context.TODO())
-	var DB = client.Database(m.Db)
-	if err != nil {
-		return &mongo.Database{}, &mongo.Client{}, err
-	}
+	var DB = client.Database(db)
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
-		return &mongo.Database{}, &mongo.Client{}, err
+		return nil, nil, err
 	}
+
 	return DB, client, nil
 }
