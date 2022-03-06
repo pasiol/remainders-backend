@@ -37,17 +37,15 @@ func getCustomHTTPServer(e *echo.Echo) http.Server {
 }
 
 func (a *App) getDbConnection() (*mongo.Database, *mongo.Client, error) {
+	uri, exists := os.LookupEnv("APP_DB_URI")
+	if !exists {
+		a.API.Logger.Fatal("missing database connection string")
+	}
 	var err error
 	var db *mongo.Database
 	var client *mongo.Client
 	for i := 1; i <= 10; i++ {
-		m := MongoConfig{
-			User:     os.Getenv("APP_DB_USER"),
-			Password: os.Getenv("APP_DB_PASSWORD"),
-			Db:       os.Getenv("APP_DB"),
-			URI:      os.Getenv("APP_DB_URI"),
-		}
-		db, client, err = ConnectOrFail(m, true)
+		db, client, err = connectOrFail(uri, "wilmaMessages")
 		if err == nil {
 			break
 		}
