@@ -15,6 +15,7 @@ Reminders is a service that allows you to browse automated emails sent to users.
 - remainders-backend REST-service, https://github.com/pasiol/remainders-backend
 - remainders-frontend React frontend, Lauri Ruuskanen on an internship at Riveria School, https://github.com/lauriruusk/remainders-frontend
 - test data generator, https://github.com/pasiol/remainders-testdata
+- remainders-user, Cobra based cli utility to create users for frontend, https://github.com/pasiol/remainders-user
 
 ## Demo environment
 
