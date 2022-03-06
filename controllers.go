@@ -21,7 +21,7 @@ func (a *App) getDbConnection() (*mongo.Database, *mongo.Client, error) {
 	var db *mongo.Database
 	var client *mongo.Client
 	for i := 1; i <= 10; i++ {
-		db, client, err = connectOrFail(uri, "wilmaMessages")
+		db, client, err = connectOrFail(uri)
 		if err == nil {
 			break
 		}

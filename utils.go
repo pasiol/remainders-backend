@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -38,13 +39,17 @@ func GetDebug() bool {
 	return os.Getenv("APP_DEBUG") == "true"
 }
 
-func connectOrFail(uri string, db string) (*mongo.Database, *mongo.Client, error) {
+func connectOrFail(uri string) (*mongo.Database, *mongo.Client, error) {
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, nil, err
 	}
 	err = client.Connect(context.Background())
+	if err != nil {
+		return nil, nil, err
+	}
+	db, err := getDbName(uri)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -55,4 +60,29 @@ func connectOrFail(uri string, db string) (*mongo.Database, *mongo.Client, error
 	}
 
 	return DB, client, nil
+}
+
+func getDbName(uri string) (string, error) {
+
+	beginning, err := regexp.Compile(`(mongodb(\+srv|)://(\S*):(\S*)@(\S*)/)`)
+	if err != nil {
+		return "", err
+	}
+
+	match := beginning.FindAllString(uri, -1)
+	if len(match) > 0 {
+
+		dbName := strings.Replace(uri, match[0], "", 1)
+		ending, err := regexp.Compile(`\?(\S*)`)
+		if err != nil {
+			return "", err
+		}
+		match = ending.FindAllString(dbName, -1)
+		if len(match) > 0 {
+			dbName = strings.Replace(string(dbName), match[0], "", 1)
+		}
+
+		return string(dbName), nil
+	}
+	return "", errors.New("cannot extract db name")
 }
