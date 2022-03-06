@@ -2,39 +2,15 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
+	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"time"
-
-	"github.com/labstack/echo/v4"
-	"golang.org/x/crypto/acme"
-	"golang.org/x/crypto/acme/autocert"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-func getCustomHTTPServer(e *echo.Echo) http.Server {
-	autoTLSManager := autocert.Manager{
-		Prompt: autocert.AcceptTOS,
-		// Cache certificates to avoid issues with rate limits (https://letsencrypt.org/docs/rate-limits)
-		Cache:      autocert.DirCache(os.Getenv("APP_CERT_CACHE_PATH")),
-		HostPolicy: autocert.HostWhitelist("APP_DOMAIN_NAME"),
-	}
-	return http.Server{
-		Addr:    ":443",
-		Handler: e, // set Echo as handler
-		TLSConfig: &tls.Config{
-			//Certificates: nil, // <-- s.ListenAndServeTLS will populate this field
-			GetCertificate: autoTLSManager.GetCertificate,
-			NextProtos:     []string{acme.ALPNProto},
-		},
-		ReadTimeout: 30 * time.Second, // use custom timeouts
-	}
-}
 
 func (a *App) getDbConnection() (*mongo.Database, *mongo.Client, error) {
 	uri, exists := os.LookupEnv("APP_DB_URI")
@@ -61,7 +37,7 @@ func search(searchPhrase string, db *mongo.Database) ([]Remainder, error) {
 	queryOptions.SetSort(bson.D{{"updated_at", -1}})
 	queryOptions.SetLimit(200)
 
-	cursor, err := db.Collection("sended").Find(context.TODO(), bson.D{{"to", bson.D{{"$regex", searchPhrase}, {"$options", "im"}}}}, queryOptions)
+	cursor, err := db.Collection("sended").Find(context.TODO(), bson.D{{"to", bson.D{{"$regex", fmt.Sprintf("%s", searchPhrase)}, {"$options", "im"}}}}, queryOptions)
 	if err != nil {
 		return []Remainder{}, err
 	}
