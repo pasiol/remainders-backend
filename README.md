@@ -31,4 +31,4 @@ TODO:
 - securing cluster
 - branch for MongoDB cluster on the Kubernetes cluster 
 - branch for Atlas operator
-- Let's Encrypt support on the Cert Manager on DO, GKE and Azure
+- branches for Let's Encrypt support on the Cert Manager on DO, GKE and Azure
